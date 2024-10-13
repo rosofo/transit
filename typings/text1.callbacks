@@ -1,0 +1,16 @@
+# me - this DAT.
+# textCOMP - The connected Text COMP
+
+def onValueChange(comp, value, prevValue):
+	return
+	
+def onFocus(comp):
+	return
+
+def onFocusEnd(comp):
+	return
+	
+def onTextEdit(comp):
+	return
+	
+	

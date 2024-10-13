@@ -1,0 +1,6 @@
+def onValueChange(par, prev):
+	ext.AnnotateExt.onParValueChange(par, prev)
+
+def onPulse(par):
+	ext.AnnotateExt.onParPulse(par)
+	
