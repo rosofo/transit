@@ -1,3 +1,4 @@
+from typing import Any
 from td import *
 import parameter
 import parameterTypes
@@ -6213,6 +6214,7 @@ You can use the [[Palette:debugControl|debugControl]] component in the palette t
 	"""A namespace containing information about how to process ```debug``` statements. This data is not meant to be changed directly. Instead, use the setStyle function below."""
 	par : parameter.debug
 	"""Parameters of parameter.debug"""
+	def __init__(self, *args, **kwargs) -> None: ...
 	def debug(self, *args) -> None: 
 		"""Print all args and extra debug info (default is DAT and line number) to texport. To change behavior, use the [[Palette:debugControl|debugControl]] component or setStyle function (below).<br>'''TIP: Always use ```debug</code> instead of <code>print``` when debugging Python scripts.'''"""
 		pass
@@ -12893,3 +12895,4 @@ class Poly(Prim):
 
 from ExtOpenVSCode import *
 from TransitionExt import *
+from StateExt import *

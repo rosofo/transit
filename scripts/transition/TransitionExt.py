@@ -35,8 +35,8 @@ class TransitionExt:
         ]
         event = self.evalEvent
 
-        sources = [s.name for s in in_states]
-        targets = [t.name for t in out_states]
+        sources = [s.StateName for s in in_states]
+        targets = [t.StateName for t in out_states]
         ts = []
         for target in targets:
             ts.append(
