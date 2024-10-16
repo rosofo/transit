@@ -26,6 +26,10 @@ class StatExt:
             ]
         )
 
+    def IsState(self, state: str):
+        self.State.val  # trigger dependency of the caller
+        return self.Machine.is_state(state, self.Machine)
+
     @property
     def state(self):
         return self.Machine.state

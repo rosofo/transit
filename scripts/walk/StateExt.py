@@ -1,3 +1,4 @@
+from typing import Any
 import transitions
 from extUtils import CustomParHelper
 import TDFunctions as tdf
@@ -9,6 +10,9 @@ class StateExt:
         CustomParHelper.Init(
             self, ownerComp, enable_properties=True, enable_callbacks=True
         )
+
+    def onParParallel(self):
+        parent.stat.Collect()
 
     @property
     def StateName(self):
@@ -35,14 +39,22 @@ class StateExt:
             if "stat_state" in c.owner.tags
         ]
 
-    def find_substates(self) -> list[str]:
+    def FindSubstates(self) -> dict:
         outputs = self.ownerComp.outputConnectors
-        return [
-            c.owner.name
-            for o in outputs
-            for c in o.connections
-            if "stat_state" in c.owner.tags
-        ]
+
+        children_type = "parallel" if self.evalParallel else "children"
+        substates = {
+            children_type: [
+                {"name": c.owner.name, **c.owner.FindSubstates()}
+                for o in outputs
+                for c in o.connections
+                if "stat_state" in c.owner.tags
+            ]
+        }
+        if substates[children_type]:
+            return substates
+        else:
+            return {}
 
     def IsSubstate(self) -> bool:
         owner: "COMP" = self.ownerComp
@@ -54,10 +66,8 @@ class StateExt:
 
     def GetConfig(self) -> "transitions.core.StateConfig | None":
         if self.IsSubstate():
+            # its ancestor will traverse this substate while building the config
             return None
         name = self.ownerComp.name
-        substates = self.find_substates()
-        if substates:
-            return {"name": name, "parallel": substates, "initial": substates[0]}
-        else:
-            return name
+        substates = self.FindSubstates()
+        return {"name": name, **substates}
