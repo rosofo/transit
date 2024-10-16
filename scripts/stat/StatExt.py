@@ -59,6 +59,9 @@ class StatExt:
         event = self.evalEvent  # type: ignore
         self.Machine.dispatch(event)
 
+    def Dispatch(self, event: str):
+        return self.Machine.dispatch(event)
+
     def DumpSchema(self, config):
         text = op("text_debug")
         text.text = pprint.pformat(config, indent=4)
@@ -99,8 +102,8 @@ class StatExt:
         if self.evalShowschema:
             self.DumpSchema(config)
         self.Machine = HierarchicalMachine(**config)
-
         self.SetState(initial)
+        self.createCustomPars(config)
 
     def add_transition_from_op(self, name):
         t: "TransitionExt" = op(name)
@@ -111,3 +114,14 @@ class StatExt:
     def after_state_change(self):
         debug("after state change", self.Machine.state)
         self.State.val = self.Machine.state
+
+    def createCustomPars(self, config):
+        transitions = config["transitions"]
+        events = {t["trigger"] for t in transitions}
+        page = next((p for p in self.ownerComp.pages if p.name == "Events"), None)
+        if page is not None:
+            page.destroy()
+        page = self.ownerComp.appendCustomPage("Events")
+        for event in events:
+            par_name = "".join(event.capitalize().split("_"))
+            page.appendPulse(par_name, label=event)
