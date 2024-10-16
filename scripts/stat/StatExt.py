@@ -26,9 +26,24 @@ class StatExt:
             ]
         )
 
-    def IsState(self, state: str):
+    def IsState(self, *states: str, exact: bool = False):
         self.State.val  # trigger dependency of the caller
+        if exact:
+            return all(self.is_state_exact(state) for state in states)
+        else:
+            return all(self.is_state_partial(state) for state in states)
+
+    def OneOf(self, *states: str, exact: bool = False):
+        return any(self.IsState(s, exact=exact) for s in states)
+
+    def is_state_exact(self, state: str):
         return self.Machine.is_state(state, self.Machine)
+
+    def is_state_partial(self, state: str):
+        """Handle compound states. E.g. given state `a_b` or `[a, [b, c]]`, `is_state_partial('a') == True`."""
+        # horrible but they can be arbitrarily nested!
+        states_str = str(self.Machine.state)
+        return state in states_str
 
     def onParCollect(self):
         self.Collect()
@@ -85,7 +100,7 @@ class StatExt:
             self.DumpSchema(config)
         self.Machine = HierarchicalMachine(**config)
 
-        self.SetState(preserve if preserve != "initial" else initial)
+        self.SetState(initial)
 
     def add_transition_from_op(self, name):
         t: "TransitionExt" = op(name)
