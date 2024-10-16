@@ -12,13 +12,13 @@ class StatExt:
         CustomParHelper.Init(
             self, ownerComp, enable_properties=True, enable_callbacks=True
         )
-        self.State = tdu.Dependency(val=self.state)
+        self.State = tdu.Dependency(val="initial")
         self.Collect()
 
     def DebugDump(self):
         table = op("table_debug")
         table.clear()
-        table.appendRow(["self.state", self.state])
+        table.appendRow(["self.State", self.State.peekVal])
         table.appendRow(
             [
                 "self.Machine.state",
@@ -29,10 +29,6 @@ class StatExt:
     def IsState(self, state: str):
         self.State.val  # trigger dependency of the caller
         return self.Machine.is_state(state, self.Machine)
-
-    @property
-    def state(self):
-        return self.Machine.state
 
     def onParCollect(self):
         self.Collect()
@@ -45,7 +41,7 @@ class StatExt:
         self.State.val = state
 
     def onParDispatch(self):
-        event = self.evalEvent
+        event = self.evalEvent  # type: ignore
         self.Machine.dispatch(event)
 
     def DumpSchema(self, config):
@@ -54,7 +50,7 @@ class StatExt:
 
     def Collect(self):
         # preserve the current state if it still exists
-        preserve = self.state
+        preserve = self.State.peekVal
         ops = op("opfind1").rows(val=True)
         debug("ops", ops)
 
@@ -98,5 +94,5 @@ class StatExt:
         self.Machine.add_transitions(trans)
 
     def after_state_change(self):
-        debug("after state change", self.state)
-        self.State.val = self.state
+        debug("after state change", self.Machine.state)
+        self.State.val = self.Machine.state
