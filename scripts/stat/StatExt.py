@@ -1,6 +1,7 @@
 import json
 import pprint
 import re
+from typing import Any, Iterable
 from extUtils import CustomParHelper
 from transitions.extensions import HierarchicalMachine
 
@@ -35,6 +36,16 @@ class StatExt:
 
     def OneOf(self, *states: str, exact: bool = False):
         return any(self.IsState(s, exact=exact) for s in states)
+
+    def Pick(self, *states: str | tuple[str | Iterable[str], Any], exact: bool = False):
+        for i, state in enumerate(states):
+            value = i
+            if isinstance(state, tuple):
+                state, value = state
+            state = (state,) if isinstance(state, str) else state
+            if self.IsState(*state, exact=exact):
+                return value
+        return None
 
     def is_state_exact(self, state: str):
         return self.Machine.is_state(state, self.Machine)
