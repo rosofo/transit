@@ -11,15 +11,10 @@ class Extension(Protocol):
 
 class Transit:
     ext: Extension
+    previous_state: str | None = None
 
     def __init__(self, extension: Extension) -> None:
         self.ext = extension
-        self._reset_custom_pages()
-
-    def _reset_custom_pages(self):
-        comp = self.ext.ownerComp
-        for page in comp.customPages:
-            page.destroy()
 
     def condition(self, name: str, callback: Callable[[float], bool] | None = None):
         """Create a condition for use in transitions and expose it as a custom parameter"""
@@ -55,14 +50,15 @@ class Transit:
         self._expose_state(machine, page)
         self._expose_events(machine, page)
         self._expose_presets(machine, page)
+        self._enable_morphs(machine)
 
     def _expose_state(self, machine: Machine, page: "Page"):
         par = page.appendStr("State", label="State")
         par.readOnly = True
-        par.val = machine.state
+        par.val = machine.model.state
 
         def after_state_change(*args, **kwargs):
-            par.val = machine.state
+            par.val = machine.model.state
 
         machine.after_state_change.append(after_state_change)
 
@@ -93,7 +89,7 @@ class Transit:
         def set_presets(*args, **kwargs):
             comp = self.ext.ownerComp
             seq: "Sequence" = comp.seq.Presets
-            state = machine.state
+            state = machine.model.state
             for i, preset in enumerate(seq.blocks):
                 matching_par = preset.parGroup[
                     f"Preset{self.to_par_name(state).lower()}"
@@ -114,6 +110,41 @@ class Transit:
         method.__name__ = method_name
 
         setattr(self.ext.__class__, method_name, method)
+
+    def _enable_morphs(self, machine: Machine):
+        comp = self.ext.ownerComp
+        seq = comp.seq.Tdmorphops
+        machine.after_state_change.append(self._create_morph_callback(seq, machine))
+
+    def _create_morph_callback(self, seq: "Sequence", machine: Machine):
+        tdmorph = self.ext.ownerComp.op("PresetManager")
+        paths = tdmorph.op("Paths")
+
+        def morph_callback(*args, **kwargs):
+            previous = self.previous_state
+            state = machine.model.state
+            self.previous_state = state
+
+            for block in seq.blocks:
+                target_op = block.par.Op.eval()
+                if target_op is None:
+                    continue
+                target_path = target_op.path
+                if not paths.IsStoredPath(target_path):
+                    paths.Create(
+                        target_path,
+                        previousData={"custom": True, "builtin": True, "filter": ".+"},
+                    )
+                paths.AutoUpdatePaths()
+
+            if previous is not None:
+                tdmorph.StorePreset(previous)
+            presets = tdmorph.GetPresetsKeys()
+
+            if state in presets:
+                tdmorph.MorphPreset(state)
+
+        return morph_callback
 
     @staticmethod
     def _event_par_name(name: str):

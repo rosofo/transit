@@ -24,6 +24,12 @@ class TransitExt:
             self, ownerComp, enable_properties=True, enable_callbacks=True
         )
 
+    def onParRebuildpars(self):
+        for page in self.ownerComp.customPages:
+            if page.name == "Transit":
+                continue
+            page.destroy()
+
     def IsState(self, *states: str, exact: bool = False):
         self.ownerComp.par.State.val  # trigger dependency of the caller
         if exact:
