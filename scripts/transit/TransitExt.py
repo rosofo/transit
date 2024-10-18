@@ -17,7 +17,7 @@ class TransitExt:
             name="foo",
             states=["A", "B", "C"],
             initial="A",
-            transitions=[{"trigger": "go", "source": "A", "dest": "B"}],
+            transitions=[["go", "A", "B"], ["go", "B", "C"], ["go", "C", "A"]],
         )
         self.transit.expose_machine(self.Machine)
         CustomParHelper.Init(
