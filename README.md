@@ -35,6 +35,11 @@ You get a COMP that can do this:
 
 https://github.com/user-attachments/assets/7208f4ff-9f1e-415d-a2e6-917104a9d61c
 
+## Caveats
+
+- HierarchicalStateMachine is not yet supported
+- Many transitions features are untested with this COMP. Make an issue/PR and I'll see if I can support them.
+
 ## Conditions
 
 Use `self.transit.condition` to expose a float par on the COMP and make transitions conditional with it.
