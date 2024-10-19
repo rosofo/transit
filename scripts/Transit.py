@@ -137,12 +137,18 @@ class Transit:
                     )
                 paths.AutoUpdatePaths()
 
-            if previous is not None:
+            autoStore = self.ext.ownerComp.par.Autostore.eval()
+            morphTime = self.ext.ownerComp.par.Morphtime.eval()
+            autoMorph = self.ext.ownerComp.par.Automorph.eval()
+            if autoStore and previous is not None:
                 tdmorph.StorePreset(previous)
+
+            if not autoMorph:
+                return
             presets = tdmorph.GetPresetsKeys()
 
             if state in presets:
-                tdmorph.MorphPreset(state)
+                tdmorph.MorphPreset(state, morphTime=morphTime)
 
         return morph_callback
 
