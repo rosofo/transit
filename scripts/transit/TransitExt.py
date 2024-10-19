@@ -14,6 +14,7 @@ class TransitExt:
         self.ownerComp = ownerComp
         self.transit = Transit(self)
         self.Machine = Machine(
+            self,
             name="foo",
             states=["A", "B", "C"],
             initial="A",
@@ -66,5 +67,5 @@ class TransitExt:
     def is_state_partial(self, state: str):
         """Handle compound states. E.g. given state `a_b` or `[a, [b, c]]`, `is_state_partial('a') == True`."""
         # horrible but they can be arbitrarily nested!
-        states_str = str(self.Machine.state)
+        states_str = str(self.Machine.model.state)
         return state in states_str
