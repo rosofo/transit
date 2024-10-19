@@ -16,20 +16,14 @@ class TransitExt:
         self.Machine = Machine(
             self,
             name="foo",
-            states=["A", "B", "C"],
+            states=["A", "B", "D", "E"],
             initial="A",
-            transitions=[["go", "A", "B"], ["go", "B", "C"], ["go", "C", "A"]],
+            transitions=[["go", "A", "B"], ["go", "B", "C"], ["go", "D", "A"]],
         )
         self.transit.expose_machine(self.Machine)
         CustomParHelper.Init(
             self, ownerComp, enable_properties=True, enable_callbacks=True
         )
-
-    def onParRebuildpars(self):
-        for page in self.ownerComp.customPages:
-            if page.name == "Transit":
-                continue
-            page.destroy()
 
     def IsState(self, *states: str, exact: bool = False):
         self.ownerComp.par.State.val  # trigger dependency of the caller

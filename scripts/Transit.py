@@ -1,12 +1,10 @@
 import re
-from typing import Callable, Protocol
+from typing import Callable
+from common_types import Extension
+from par_merging import ParMerger
 
 op("td_pip").PrepareModule("transitions")  # type: ignore
 from transitions import Machine  # noqa: E402
-
-
-class Extension(Protocol):
-    ownerComp: "COMP"
 
 
 class Transit:
@@ -15,6 +13,9 @@ class Transit:
 
     def __init__(self, extension: Extension) -> None:
         self.ext = extension
+        self.par_merger = ParMerger(self.ext)
+        self.par_merger.cache_settings()
+        self.par_merger.clear_pages(ignore=["Transit"])
 
     def condition(self, name: str, callback: Callable[[float], bool] | None = None):
         """Create a condition for use in transitions and expose it as a custom parameter"""
@@ -51,6 +52,8 @@ class Transit:
         self._expose_events(machine, page)
         self._expose_presets(machine, page)
         self._enable_morphs(machine)
+
+        self.par_merger.restore_settings()
 
     def _expose_state(self, machine: Machine, page: "Page"):
         par = page.appendStr("State", label="State")
