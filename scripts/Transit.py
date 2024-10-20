@@ -55,12 +55,18 @@ class Transit:
     def _expose_state(self, machine: Machine, page: "Page"):
         par = page.appendStr("State", label="State")
         par.readOnly = True
-        par.val = machine.model.state
+        self._update_state_par(machine)
 
-        def after_state_change(*args, **kwargs):
+        machine.after_state_change.append(
+            lambda *args, **kwargs: self._update_state_par(machine)
+        )
+
+    def _update_state_par(self, machine: Machine):
+        par = self.ext.ownerComp.par.State
+        if isinstance(machine.model, list) and par.val != "Multiple Models":
+            par.val = "Multiple Models"  # type: ignore
+        else:
             par.val = machine.model.state
-
-        machine.after_state_change.append(after_state_change)
 
     def _expose_events(self, machine: Machine, page: "Page"):
         for event in machine.events:
