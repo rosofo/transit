@@ -144,7 +144,10 @@ class Transit:
             if par.val != "Multiple Models":
                 par.val = "Multiple Models"  # type: ignore
         else:
-            par.val = machine.model.state
+            try:
+                par.val = machine.model.state
+            except Exception as e:
+                debug(f"Error updating state par: {e}")
 
     def _expose_events(self, machine: Machine, page: "Page"):
         for event in machine.events:

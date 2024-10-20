@@ -7,6 +7,16 @@ op("td_pip").PrepareModule("transitions")
 from transitions import Machine  # noqa: E402
 
 
+class Model:
+    temp: float = 50.0
+
+    def prepare(self, temp):
+        self.temp += temp
+
+    def is_boiling_temp(self, temp):
+        return self.temp >= 100
+
+
 class TransitExt:
     ownerComp: "COMP"
 
@@ -14,13 +24,27 @@ class TransitExt:
         self.ownerComp = ownerComp
         self.transit = Transit(self)
         self.Machine = Machine(
-            self,
+            None,
             name="foo",
-            states=["A", "B", "C"],
-            initial="A",
-            transitions=[["go", "A", "B"], ["go", "B", "C"], ["go", "C", "A"]],
+            states=["liquid", "gas"],
+            initial="liquid",
+            prepare_event="prepare",
+            transitions=[
+                {
+                    "trigger": "heat",
+                    "source": "liquid",
+                    "dest": "gas",
+                    "conditions": ["is_boiling_temp"],
+                },
+                {
+                    "trigger": "heat",
+                    "source": "gas",
+                    "dest": "liquid",
+                    "unless": "is_boiling_temp",
+                },
+            ],
         )
-        self.transit.expose_machine(self.Machine)
+        self.transit.expose_machine(self.Machine, model_class=Model)
         CustomParHelper.Init(
             self, ownerComp, enable_properties=True, enable_callbacks=True
         )
