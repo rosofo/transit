@@ -9,7 +9,6 @@ from transitions import Machine  # noqa: E402
 
 class Transit:
     ext: Extension
-    previous_state: str | None = None
 
     def __init__(self, extension: Extension) -> None:
         self.ext = extension
