@@ -1,24 +1,30 @@
 import re
 from typing import Any, Iterable
 from extUtils import CustomParHelper
-from Transit import Transit
 
 op("td_pip").PrepareModule("transitions")
-from transitions import Machine  # noqa: E402
+from Transit import Transit  # noqa: E402
 
 
-class TransitExt:
+CallbacksExt = op.TDModules.op("TDCallbacksExt").module.CallbacksExt  # type: ignore
+
+
+class TransitExt(CallbacksExt):
     ownerComp: "COMP"
 
     def __init__(self, ownerComp):
+        super().__init__(ownerComp)
         self.ownerComp = ownerComp
-        self.transit = Transit(self)
-        machine, Model = ownerComp.par.Callbacksdat.eval().module.initMachine()
-        self.Machine = machine
-        self.transit.expose_machine(self.Machine, model_class=Model)
+        self.Setup()
         CustomParHelper.Init(
             self, ownerComp, enable_properties=True, enable_callbacks=True
         )
+
+    def Setup(self):
+        self.transit = Transit(self)
+        machine, Model = self.DoCallback("initMachine")["returnValue"]
+        self.Machine = machine
+        self.transit.expose_machine(self.Machine, model_class=Model)
 
     def IsState(self, *states: str, exact: bool = False):
         self.ownerComp.par.State.val  # trigger dependency of the caller
