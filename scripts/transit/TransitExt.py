@@ -26,6 +26,14 @@ class TransitExt(CallbacksExt):
         self.Machine = machine
         self.transit.expose_machine(self.Machine, model_class=Model)
 
+    def onParDispatchinputs(self, par):
+        self.DispatchInputs()
+
+    def DispatchInputs(self):
+        eventOp = op("in_events")  # type: ignore
+        contextDataOp = op("in_context_data")  # type: ignore
+        self.transit.process_chop_events(eventOp, contextDataOp)
+
     def IsState(self, *states: str, exact: bool = False):
         self.ownerComp.par.State.val  # trigger dependency of the caller
         if exact:
