@@ -1,5 +1,7 @@
+from collections import defaultdict
 import re
 from typing import Any, Callable
+import typing
 from common_types import Extension
 from par_merging import ParMerger
 import numpy as np
@@ -16,12 +18,35 @@ class Transit:
     ext: Extension
     _machine: Machine | None = None
     model_class: type[Any] = DefaultModel
+    _model_fields: list[str] | None = None
 
     def __init__(self, extension: Extension) -> None:
         self.ext = extension
         self.par_merger = ParMerger(self.ext)
         self.par_merger.cache_settings()
         self.par_merger.clear_pages(ignore=["Transit"])
+
+    @property
+    def model_fields(self) -> list[str]:
+        if self._model_fields is None:
+            self._model_fields = [
+                name
+                for name, type in typing.get_type_hints(self.model_class).items()
+                if type in [int, float, bool]
+            ]
+
+        return self._model_fields
+
+    def get_model_states(self, include_fields: bool):
+        models = self.machine.models
+        output = defaultdict(list)
+        for model in models:
+            fields = ["state"]
+            if include_fields:
+                fields += self.model_fields
+            for field in fields:
+                output[field].append(getattr(model, field))
+        return output
 
     @property
     def machine(self) -> Machine:
