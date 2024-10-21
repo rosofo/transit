@@ -8,59 +8,26 @@ Transit is a COMP which wraps state machines written in the venerable [transitio
 ## Quickstart
 
 1. Grab `transit.tox` from the releases and drop it into a project
-2. Open `transit/TransitExt` in your favourite text editor. You'll see a simple default state machine defined in `__init__`. Replace that with one of your own design, referencing the [transitions docs](https://github.com/pytransitions/transitions). Here's how its features will be mapped to TouchDesigner:
-    - The current state will get its own custom par which you can monitor in other OPs
-    - Transition triggers will appear as pulses, including 'auto transitions' like `to_a`, `to_b`
-    - Callbacks such as `conditions`, `before`, `after`, etc can reference methods you define on the extension by name. To enable this, set `model=self` on `Machine`.
-  
-For more on morphing, conditions and the API see further down.
+2. Edit `transit_callbacks` and replace the machine with your design, referencing the [transitions docs](https://github.com/pytransitions/transitions). You can optionally add fields and callbacks to the `Model` here for more complex behaviours
+3. Set `Model Count` to the number of instances you want to track
 
-## Example
+### Outputs
 
-Given the following Machine (placed inside the `transit/TransitExt` DAT):
+- CHOP
+  Represents the state of every model the machine is operating on
+    - `state` channel: each sample is the current state of a model, represented as an index into the `states` attribute of the Machine
+    - other channels: each sample is the state of a field you've defined on the model. Fields must be `int`, `float` or `bool` to appear.
 
-```python
-self.transit = Transit(self)
-self.Machine = Machine(
-    self,
-    name="myco",
-    states=["smooth", "chaotic"],
-    initial="smooth",
-    transitions=[["go", "smooth", "chaotic"], ["go", "chaotic", "smooth"]],
-)
-self.transit.expose_machine(self.Machine)
-```
+### Inputs
 
-You get a COMP that can do this:
+- `in_events` CHOP:
+  Dispatch events/triggers on a per-model basis
+  - channel name: the name of the trigger
+  - channel samples: the index of the model. For example with `Model Count` set to `1000`, the valid range for a sample is 0-999. Values outside the range are ignored.
 
-https://github.com/user-attachments/assets/7208f4ff-9f1e-415d-a2e6-917104a9d61c
+- `in_event_data` CHOP:
+  Extra data to provide with events. This will be passed to Machine callbacks as described in [passing data](https://github.com/pytransitions/transitions?tab=readme-ov-file#passing-data)
 
 ## Caveats
 
 - HierarchicalStateMachine is not yet supported
-- Many transitions features are untested with this COMP. Make an issue/PR and I'll see if I can support them.
-
-## Conditions
-
-Use `self.transit.condition` to expose a float par on the COMP and make transitions conditional with it.
-
-By default the condition will return True if the par is `>= 1`: `transitions=[..., {"trigger": "go", ..., "conditions": [self.transit.condition('is_valid')]`.
-
-Pass a callback to create a more complex condition: `self.transit.condition('temperature', lambda t: t > 50)`.
-
-## Morphing
-
-On the `Transit` page you'll find these options:
-
-- enable/disable preset storing when exiting a state
-- enable/disable morphing to the preset for a state when entering it
-- morph time
-- target OPs
-
-Set any OPs you want to target for morphing here, then try tweaking settings and triggering transitions. You should see your OP pars moving smoothly from state to state.
-
-## Python API
-
-- `op('transit').Map('a 1 b 2.7')`: a quick way to map the current state to a float. Returns `0` if the state isn't in your expr.
-- `op('transit').Pick('a', ('b', 3.141), 'c')` same thing but slightly more typing :). Omit the value for a state to map it to its index in the args. So here `a` maps to 0, `c` maps to 2.
-- `op('transit').IsState(state)` check if the current state matches `state`
